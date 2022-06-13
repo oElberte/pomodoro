@@ -32,7 +32,7 @@ abstract class AbsPomodoroStore with Store {
   @action
   void start() {
     started = true;
-    stopwatch = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+    stopwatch = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (minutes == 0 && seconds == 0) {
         _changeBreakType();
       } else if (seconds == 0) {
@@ -53,26 +53,44 @@ abstract class AbsPomodoroStore with Store {
   @action
   void restart() {
     stop();
+    minutes = isWorking() ? workTime : restTime;
+    seconds = 0;
   }
 
   @action
   void incrementWorkTime() {
     workTime++;
+    if (isWorking()) {
+      restart();
+    }
   }
 
   @action
   void decrementWorkTime() {
-    workTime--;
+    if (workTime > 1) {
+      workTime--;
+      if (isWorking()) {
+        restart();
+      }
+    }
   }
 
   @action
   void incrementRestTime() {
     restTime++;
+    if (isResting()) {
+      restart();
+    }
   }
 
   @action
   void decrementRestTime() {
-    restTime--;
+    if (restTime > 1) {
+      restTime--;
+      if (isResting()) {
+        restart();
+      }
+    }
   }
 
   bool isWorking() {
@@ -85,11 +103,11 @@ abstract class AbsPomodoroStore with Store {
 
   void _changeBreakType() {
     if (isWorking()) {
-      breakType == BreakType.rest;
-      minutes == restTime;
+      breakType = BreakType.rest;
+      minutes = restTime;
     } else {
-      breakType == BreakType.work;
-      minutes == workTime;
+      breakType = BreakType.work;
+      minutes = workTime;
     }
     seconds = 0;
   }
